@@ -2,24 +2,34 @@ const messagesEl = document.getElementById('messages');
 const formEl = document.getElementById('composer');
 const inputEl = document.getElementById('messageInput');
 
+class ChatMessage extends HTMLElement {
+  connectedCallback() {
+    const sender = this.getAttribute('sender') || 'ai';
+    const label = sender === 'user' ? 'You' : 'AI';
+    const text = this.textContent?.trim() ?? '';
+
+    this.innerHTML = `
+      <div class="bubble">
+        <div class="meta">${label}</div>
+        <div class="text"></div>
+      </div>
+    `;
+
+    this.querySelector('.text').textContent = text;
+  }
+}
+
+customElements.define('chat-message', ChatMessage);
+
 function addMessage(text) {
   const trimmed = text.trim();
   if (!trimmed) return;
 
-  const bubble = document.createElement('div');
-  bubble.className = 'bubble bubble--me';
+  const message = document.createElement('chat-message');
+  message.setAttribute('sender', 'user');
+  message.textContent = trimmed;
 
-  const meta = document.createElement('div');
-  meta.className = 'bubble__meta';
-  meta.textContent = 'You';
-
-  const body = document.createElement('div');
-  body.className = 'bubble__text';
-  body.textContent = trimmed;
-
-  bubble.append(meta, body);
-  messagesEl.appendChild(bubble);
-
+  messagesEl.appendChild(message);
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 

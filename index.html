@@ -3,35 +3,63 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Static Chat UI</title>
+    <title>Chat UI</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <main class="app">
-      <header class="header">
-        <h1 class="title">Chat</h1>
-        <p class="subtitle">Static UI</p>
-      </header>
+    <div class="layout">
+      <aside class="sidebar" aria-label="Conversations sidebar">
+        <button class="new-chat-btn" type="button">+ New Chat</button>
 
-      <section id="messages" class="messages" aria-label="Message list">
-        <div class="bubble bubble--system">
-          <div class="bubble__meta">System</div>
-          <div class="bubble__text">Type a message and press Send.</div>
-        </div>
-      </section>
+        <nav class="conversation-list" aria-label="Conversation list">
+          <button class="conversation-item conversation-item--active" type="button">
+            <div class="conversation-title">Project Help</div>
+            <div class="conversation-preview">Project Setup</div>
+          </button>
 
-      <form id="composer" class="composer" autocomplete="off">
-        <input
-          id="messageInput"
-          class="composer__input"
-          type="text"
-          placeholder="Write a message…"
-          aria-label="Message input"
-          required
-        />
-        <button id="sendBtn" class="composer__send" type="submit">Send</button>
-      </form>
-    </main>
+          <button class="conversation-item" type="button">
+            <div class="conversation-title">Random Ideas</div>
+            <div class="conversation-preview">UI layout brainstorm…</div>
+          </button>
+
+          <button class="conversation-item" type="button">
+            <div class="conversation-title">Study Notes</div>
+            <div class="conversation-preview">Algorithms recap…</div>
+          </button>
+        </nav>
+      </aside>
+
+      <main class="chat" aria-label="Chat area">
+        <header class="chat-header">
+          <div class="chat-header__title">Project Help</div>
+          <div class="chat-header__subtitle">Static UI • No backend</div>
+        </header>
+
+        <section id="messages" class="messages" aria-label="Message list">
+          <chat-message sender="ai">
+            Hi! I can help you?
+          </chat-message>
+
+          <chat-message sender="user">
+            Great! can you make the page two-column with a sidebar and pinned input?
+          </chat-message>
+
+          <chat-message sender="ai">
+            Done. The sidebar has conversations + a New Chat button.
+          </chat-message>
+        </section>
+
+        <form class="composer" aria-label="Message composer">
+          <textarea
+            class="composer__input"
+            placeholder="Write a message…"
+            aria-label="Message input"
+            rows="2"
+          ></textarea>
+          <button class="composer__send" type="button">Send</button>
+        </form>
+      </main>
+    </div>
 
     <script src="app.js" defer></script>
   </body>
