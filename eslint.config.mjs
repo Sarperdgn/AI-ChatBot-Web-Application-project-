@@ -4,10 +4,18 @@ export default [
     ignores: ['node_modules/**', 'dist/**', 'build/**'],
     languageOptions: {
       ecmaVersion: 'latest',
-      sourceType: 'module'
+      sourceType: 'module',
+      globals: {
+        document: 'readonly',
+        HTMLElement: 'readonly',
+        customElements: 'readonly',
+        window: 'readonly',
+        fetch: 'readonly',
+        TextDecoder: 'readonly',
+        console: 'readonly'
+      }
     },
     rules: {
-      // sensible defaults for small projects
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       'no-undef': 'error',
       'no-var': 'error',
