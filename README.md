@@ -41,4 +41,4 @@ WEEK 3
 ### Changed
 
 - Removed hard‑coded sample messages from HTML; all bubbles are now rendered dynamically from JavaScript
-- Cleaned most inline comments from source files while keeping behavior unchanged
+- Cleaned most inline comments from source files while keeping behavior unchanged ( removed unnecessary comments to minimize file )
