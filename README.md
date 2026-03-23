@@ -38,12 +38,6 @@ WEEK 3
   - `New Chat` button clears messages and resets history
   - Sidebar items toggle active state, update header, and start a fresh thread
 
-### Changed
-
-- Removed hard-coded sample messages from HTML; all bubbles are now rendered dynamically from JavaScript
-- Cleaned most inline comments from source files while keeping behavior unchanged
-
----
 
 WEEK 4
 
