@@ -40,5 +40,35 @@ WEEK 3
 
 ### Changed
 
-- Removed hard‑coded sample messages from HTML; all bubbles are now rendered dynamically from JavaScript
+- Removed hard-coded sample messages from HTML; all bubbles are now rendered dynamically from JavaScript
 - Cleaned most inline comments from source files while keeping behavior unchanged
+
+---
+
+WEEK 4
+
+### Added
+
+- Rebuilt the project as a React + Vite app with component-based architecture.
+- Added a Sidebar area with focused child components (`NewChatButton`, `ConversationList`, `ConversationItem`).
+- Added a Chat panel area with focused child components (`ChatHeader`, `MessageList`, `MessageItem`, `MessageForm`, `LoadingIndicator`).
+- Added a mock API layer under `src/api/`:
+  - `conversationsApi.js` with in-memory conversation data and promise-based methods.
+  - `messagesApi.js` with in-memory message data and promise-based methods.
+  - `llmApi.js` for OpenRouter completion requests (with a local fallback when no key is set).
+- Added pre-populated in-memory conversations/messages so the app has initial data on load.
+- Added loading indicator while waiting for AI reply.
+
+### Changed
+
+- App state now uses `useState` in `App.jsx` for active conversation + messages.
+- Added `useEffect` in sidebar flow for loading conversations on mount.
+- Added `useEffect` in app flow for loading messages when active conversation changes.
+- Replaced static HTML bootstrapping with React mount (`#root`).
+- Added Tailwind via CDN in `index.html`.
+
+### Run
+
+- Local: `npm install` then `npm run dev`
+- Build: `npm install` then `npm run build`
+- Test: `npm install` then `npm run lint`

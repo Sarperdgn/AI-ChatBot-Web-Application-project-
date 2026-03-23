@@ -65,4 +65,3 @@ export async function streamChatCompletion({ messages, onDelta, onDone, onError 
     }
   }
 }
-

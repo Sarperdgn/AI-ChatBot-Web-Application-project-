@@ -66,5 +66,3 @@ export function clearAllMessages() {
   if (!messagesEl) return;
   messagesEl.innerHTML = '';
 }
-
-

@@ -35,18 +35,18 @@ function setupChat() {
         conversationButtons.forEach((b) => b.classList.remove('conversation-item--active'));
         btn.classList.add('conversation-item--active');
 
-         const title = btn.querySelector('.conversation-title');
-         const preview = btn.querySelector('.conversation-preview');
+        const title = btn.querySelector('.conversation-title');
+        const preview = btn.querySelector('.conversation-preview');
 
-         if (headerTitleEl && title) {
-           headerTitleEl.textContent = title.textContent || '';
-         }
-         if (headerSubtitleEl && preview) {
-           headerSubtitleEl.textContent = preview.textContent || '';
-         }
+        if (headerTitleEl && title) {
+          headerTitleEl.textContent = title.textContent || '';
+        }
+        if (headerSubtitleEl && preview) {
+          headerSubtitleEl.textContent = preview.textContent || '';
+        }
 
-         clearAllMessages();
-         messages.length = 0;
+        clearAllMessages();
+        messages.length = 0;
       });
     });
   }
@@ -90,4 +90,3 @@ function setupChat() {
 }
 
 document.addEventListener('DOMContentLoaded', setupChat);
-
