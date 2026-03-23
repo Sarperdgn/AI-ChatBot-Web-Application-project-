@@ -41,6 +41,8 @@ WEEK 3
 
 WEEK 4
 
+![Week 4 Demo](GitHub/asset/week4.gif)
+
 ### Added
 
 - Rebuilt the project as a React + Vite app with component-based architecture.
