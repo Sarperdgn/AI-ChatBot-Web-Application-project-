@@ -68,3 +68,28 @@ WEEK 4
 - Local: `npm install` then `npm run dev`
 - Build: `npm install` then `npm run build`
 - Test: `npm install` then `npm run lint`
+
+WEEK 5
+
+### Added
+
+- Migrated from React + Vite to **Next.js 15 App Router** with TypeScript.
+- File-based routing with dynamic route `/conversations/[conversationId]`.
+- Server-side API routes under `src/app/api/`:
+  - `GET/POST /api/conversations` for conversation CRUD.
+  - `GET/POST /api/conversations/[conversationId]/messages` for message CRUD.
+- File-based persistence layer in `src/app/api/_store.ts` (`.data/` folder).
+
+### Changed
+
+- Data layer moved from client-side in-memory to server-side with file persistence.
+- OpenRouter API key now only accessible server-side (`.env.local`).
+- API client functions now use relative URLs to local API routes instead of in-memory arrays.
+- Tailwind upgraded to v4 with `@tailwindcss/postcss` integration.
+- UI for messages: user message appears immediately, replaced with server response after AI reply.
+
+### Run
+
+- Local: `npm install` then `npm run dev` (runs on `http://localhost:3000`)
+- Build: `npm install` then `npm run build`
+- Lint: `npm install` then `npm run lint`

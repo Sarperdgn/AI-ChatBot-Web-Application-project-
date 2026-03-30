@@ -1,15 +1,17 @@
+import type { Message } from '@/types/chat';
+
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-export async function requestAssistantCompletion(messages) {
-  const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+export async function requestAssistantCompletion(messages: Message[]) {
+  const apiKey = process.env.OPENROUTER_API_KEY;
 
   if (!apiKey) {
     const lastUserMessage = [...messages].reverse().find((message) => message.role === 'user');
     const fallbackText = lastUserMessage
-      ? `Mock reply: I saw your message: "${lastUserMessage.content}". Add VITE_OPENROUTER_API_KEY to use OpenRouter.`
-      : 'Mock reply: configure VITE_OPENROUTER_API_KEY to enable OpenRouter responses.';
+      ? `Mock reply: I saw your message: "${lastUserMessage.content}". Add OPENROUTER_API_KEY to use OpenRouter.`
+      : 'Mock reply: configure OPENROUTER_API_KEY to enable OpenRouter responses.';
 
-    return { role: 'assistant', content: fallbackText };
+    return { role: 'assistant' as const, content: fallbackText };
   }
 
   const response = await fetch(OPENROUTER_URL, {
@@ -17,8 +19,8 @@ export async function requestAssistantCompletion(messages) {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': window.location.origin,
-      'X-Title': 'React Chat UI'
+      'HTTP-Referer': 'http://localhost:3000',
+      'X-Title': 'Next Chat UI'
     },
     body: JSON.stringify({
       model: 'openrouter/auto',
@@ -33,5 +35,5 @@ export async function requestAssistantCompletion(messages) {
   const payload = await response.json();
   const content = payload.choices?.[0]?.message?.content?.trim() || 'No response returned.';
 
-  return { role: 'assistant', content };
+  return { role: 'assistant' as const, content };
 }
