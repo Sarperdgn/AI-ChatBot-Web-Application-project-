@@ -7,12 +7,16 @@ interface ConversationListProps {
   conversations: Conversation[];
   activeConversationId: string;
   onSelectConversation: (conversationId: string) => void;
+  onDeleteConversation: (conversationId: string) => void;
+  deletingId?: string;
 }
 
 export default function ConversationList({
   conversations,
   activeConversationId,
-  onSelectConversation
+  onSelectConversation,
+  onDeleteConversation,
+  deletingId
 }: ConversationListProps) {
   if (!conversations.length) {
     return <p className="px-2 text-sm text-slate-400">No conversations yet.</p>;
@@ -26,6 +30,8 @@ export default function ConversationList({
           conversation={conversation}
           active={conversation.id === activeConversationId}
           onSelectConversation={onSelectConversation}
+          onDeleteConversation={onDeleteConversation}
+          isDeleting={deletingId === conversation.id}
         />
       ))}
     </ul>

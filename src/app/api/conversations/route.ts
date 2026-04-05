@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
-import { createConversation, listConversations } from '@/app/api/_store';
+import { createConversation, listConversations } from '@/server/conversations';
 
 export async function GET() {
-  return NextResponse.json(listConversations());
+  const conversations = await listConversations();
+  return NextResponse.json(conversations);
 }
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as { title?: string };
-  const conversation = createConversation({ title: body.title });
+  const conversation = await createConversation({ title: body.title });
 
   return NextResponse.json(conversation, { status: 201 });
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createMessage, getConversation, listMessagesByConversation } from '@/app/api/_store';
+import { getConversation } from '@/server/conversations';
+import { createMessage, listMessagesByConversation } from '@/server/messages';
 import { requestAssistantCompletion } from '@/lib/openRouter';
 
 export async function GET(
@@ -8,11 +9,13 @@ export async function GET(
 ) {
   const { conversationId } = await context.params;
 
-  if (!getConversation(conversationId)) {
+  const conversation = await getConversation(conversationId);
+  if (!conversation) {
     return NextResponse.json({ error: 'Conversation not found.' }, { status: 404 });
   }
 
-  return NextResponse.json(listMessagesByConversation(conversationId));
+  const messages = await listMessagesByConversation(conversationId);
+  return NextResponse.json(messages);
 }
 
 export async function POST(
@@ -20,7 +23,7 @@ export async function POST(
   context: { params: Promise<{ conversationId: string }> }
 ) {
   const { conversationId } = await context.params;
-  const conversation = getConversation(conversationId);
+  const conversation = await getConversation(conversationId);
 
   if (!conversation) {
     return NextResponse.json({ error: 'Conversation not found.' }, { status: 404 });
@@ -32,17 +35,21 @@ export async function POST(
     return NextResponse.json({ error: 'Message content is required.' }, { status: 400 });
   }
 
-  const userMessage = createMessage(conversationId, 'user', body.content.trim());
+  const userMessage = await createMessage(conversationId, 'user', body.content.trim());
 
   try {
-    const chatHistory = listMessagesByConversation(conversationId);
+    const chatHistory = await listMessagesByConversation(conversationId);
     const assistantReply = await requestAssistantCompletion(chatHistory);
-    const assistantMessage = createMessage(conversationId, 'assistant', assistantReply.content);
+    const assistantMessage = await createMessage(
+      conversationId,
+      'assistant',
+      assistantReply.content
+    );
 
     return NextResponse.json({ userMessage, assistantMessage }, { status: 201 });
   } catch (error) {
     console.error(error);
-    const assistantMessage = createMessage(
+    const assistantMessage = await createMessage(
       conversationId,
       'assistant',
       'Sorry, I could not reach the AI service right now.'

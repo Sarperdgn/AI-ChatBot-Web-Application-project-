@@ -4,3 +4,10 @@ out
 .env.local
 npm-debug.log*
 .vscode/settings.json
+.data
+venv
+/src/generated/prisma
+.env
+dev.db
+.data/conversations.json
+.data/messages.json
