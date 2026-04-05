@@ -38,7 +38,6 @@ WEEK 3
   - `New Chat` button clears messages and resets history
   - Sidebar items toggle active state, update header, and start a fresh thread
 
-
 WEEK 4
 
 ![Week 4 Demo](GitHub/asset/week4.gif)

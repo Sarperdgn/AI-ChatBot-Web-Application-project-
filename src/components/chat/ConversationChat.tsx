@@ -1,70 +1,53 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import ChatPanel from './ChatPanel';
 import type { Conversation, Message } from '@/types/chat';
-import { listConversations, listMessagesByConversation, sendMessage } from '@/lib/clientApi';
+import { useConversations } from '@/hooks/conversations';
+import { useMessages, useSendMessage } from '@/hooks/messages';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function ConversationChat({ conversationId }: { conversationId: string }) {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: conversations = [] } = useConversations();
+  const { data: messages = [], isLoading: isMessagesLoading } = useMessages(conversationId);
+  const sendMessage = useSendMessage();
+  const queryClient = useQueryClient();
 
   const activeConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === conversationId) || null,
     [conversations, conversationId]
   );
 
-  useEffect(() => {
-    listConversations().then(setConversations);
-  }, []);
-
-  useEffect(() => {
-    if (!conversationId) {
-      setMessages([]);
-      return;
-    }
-
-    listMessagesByConversation(conversationId).then(setMessages);
-  }, [conversationId]);
-
   const handleSendMessage = async (content: string) => {
     if (!conversationId) return;
 
+    // Optimistic update
     const optimisticMessage: Message = {
       id: `local-${Date.now()}`,
       role: 'user',
       content
     };
 
-    setMessages((previous) => [...previous, optimisticMessage]);
-    setIsLoading(true);
+    queryClient.setQueryData(['messages', conversationId], (old: Message[] = []) => [
+      ...old,
+      optimisticMessage
+    ]);
 
     try {
-      const { userMessage, assistantMessage } = await sendMessage(conversationId, content);
-
-      setMessages((previous) => [
-        ...previous.filter((message) => message.id !== optimisticMessage.id),
-        userMessage,
-        assistantMessage
-      ]);
-
-      setConversations((previous) =>
-        previous.map((conversation) =>
-          conversation.id === conversationId ? { ...conversation, preview: content } : conversation
-        )
-      );
+      await sendMessage.mutateAsync({ conversationId, content });
     } catch {
-      setMessages((previous) => [
-        ...previous,
+      // Revert optimistic update on error
+      queryClient.setQueryData(['messages', conversationId], (old: Message[] = []) =>
+        old.filter((msg) => msg.id !== optimisticMessage.id)
+      );
+      queryClient.setQueryData(['messages', conversationId], (old: Message[] = []) => [
+        ...old,
         {
           id: `error-${Date.now()}`,
           role: 'assistant',
           content: 'Sorry, I could not send that message. Please try again.'
         }
       ]);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -72,7 +55,7 @@ export default function ConversationChat({ conversationId }: { conversationId: s
     <ChatPanel
       conversation={activeConversation}
       messages={messages}
-      isLoading={isLoading}
+      isLoading={isMessagesLoading || sendMessage.isPending}
       onSendMessage={handleSendMessage}
     />
   );

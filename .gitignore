@@ -4,3 +4,7 @@ out
 .env.local
 npm-debug.log*
 .vscode/settings.json
+.data
+venv
+/src/generated/prisma
+.env
