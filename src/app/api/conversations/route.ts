@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createConversation, listConversations } from '@/server/conversations';
+import { createConversation, listConversations } from '@/server/chat-dal';
 
 export async function GET() {
   const conversations = await listConversations();

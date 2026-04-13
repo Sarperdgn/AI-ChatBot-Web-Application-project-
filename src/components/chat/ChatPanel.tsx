@@ -1,5 +1,3 @@
-'use client';
-
 import type { Conversation, Message } from '@/types/chat';
 import ChatHeader from './ChatHeader';
 import LoadingIndicator from './LoadingIndicator';

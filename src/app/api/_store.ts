@@ -42,8 +42,8 @@ const saveMessages = (data: Record<string, Message[]>) => {
   fs.writeFileSync(MESSAGES_FILE, JSON.stringify(data, null, 2), 'utf-8');
 };
 
-let conversationsDb: Conversation[] = loadConversations();
-let messagesDb: Record<string, Message[]> = loadMessages();
+const conversationsDb: Conversation[] = loadConversations();
+const messagesDb: Record<string, Message[]> = loadMessages();
 
 export function listConversations() {
   return [...conversationsDb];
