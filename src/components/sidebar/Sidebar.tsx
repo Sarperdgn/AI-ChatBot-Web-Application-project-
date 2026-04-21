@@ -10,8 +10,12 @@ export default async function Sidebar({
 
   return (
     <SidebarClient
-      initialConversations={conversations}
       activeConversationId={activeConversationId}
+      initialConversations={conversations.map((conversation) => ({
+        id: conversation.id,
+        title: conversation.title,
+        preview: conversation.preview
+      }))}
     />
   );
 }

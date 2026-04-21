@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import type { Conversation, Message } from '@/types/chat';
 import ChatPanel from './ChatPanel';
 
@@ -20,13 +21,15 @@ export default function ConversationChat({
   const router = useRouter();
 
   const { messages, status, sendMessage } = useChat({
-    api: `/api/conversations/${conversationId}/stream`,
     id: conversationId,
     messages: initialMessages.map((message) => ({
       id: message.id,
       role: message.role,
       parts: [{ type: 'text', text: message.content }]
     })),
+    transport: new DefaultChatTransport({
+      api: `/api/conversations/${conversationId}/stream`
+    }),
     onFinish: () => {
       router.refresh();
     }
@@ -46,7 +49,7 @@ export default function ConversationChat({
   );
 
   const handleSendMessage = async (content: string) => {
-    await sendMessage({ text: content });
+    await sendMessage({ text: content }, { body: { conversationId } });
   };
 
   return (

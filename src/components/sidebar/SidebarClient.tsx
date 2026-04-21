@@ -1,106 +1,65 @@
 'use client';
 
-import { useOptimistic, useState, useTransition } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Conversation } from '@/types/chat';
+import {
+  CONVERSATIONS_QUERY_KEY,
+  useCreateConversation,
+  useDeleteConversation
+} from '@/hooks/conversations';
 import ConversationList from './ConversationList';
 import NewChatButton from './NewChatButton';
 
 interface SidebarClientProps {
-  initialConversations: Conversation[];
   activeConversationId: string;
+  initialConversations: Conversation[];
 }
 
-export default function SidebarClient({ initialConversations, activeConversationId }: SidebarClientProps) {
-  const [conversations, setConversations] = useState(initialConversations);
-  const [optimisticConversations, setOptimisticConversations] = useOptimistic(
-    conversations,
-    (current, next: Conversation[]) => next
-  );
-  const [isCreating, startCreateTransition] = useTransition();
-  const [deletingId, setDeletingId] = useState<string | undefined>();
+export default function SidebarClient({
+  activeConversationId,
+  initialConversations
+}: SidebarClientProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  const handleCreateChat = async () => {
-    const tempId = `optimistic-${Date.now()}`;
-    const optimisticConversation: Conversation = {
-      id: tempId,
-      title: `New Chat ${optimisticConversations.length + 1}`,
-      preview: 'Start a fresh conversation'
-    };
+  const { data: conversations = [] } = useQuery({
+    queryKey: CONVERSATIONS_QUERY_KEY,
+    queryFn: async () => initialConversations,
+    initialData: initialConversations,
+    staleTime: Number.POSITIVE_INFINITY
+  });
 
-    const previousConversations = conversations;
-    startCreateTransition(() => {
-      setOptimisticConversations([optimisticConversation, ...conversations]);
-    });
+  const createMutation = useCreateConversation();
+  const deleteMutation = useDeleteConversation();
 
-    try {
-      const response = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: optimisticConversation.title })
-      });
+  useEffect(() => {
+    queryClient.setQueryData(CONVERSATIONS_QUERY_KEY, initialConversations);
+  }, [initialConversations, queryClient]);
 
-      if (!response.ok) {
-        throw new Error('Failed to create conversation');
+  const handleCreateChat = () => {
+    createMutation.mutate(undefined, {
+      onSuccess: (created) => {
+        router.push(`/conversations/${created.id}`);
+        router.refresh();
       }
-
-      const created = (await response.json()) as Conversation;
-      const nextConversations = [created, ...previousConversations];
-      setConversations(nextConversations);
-      startCreateTransition(() => {
-        setOptimisticConversations(nextConversations);
-      });
-      router.push(`/conversations/${created.id}`);
-      router.refresh();
-    } catch {
-      setConversations(previousConversations);
-      startCreateTransition(() => {
-        setOptimisticConversations(previousConversations);
-      });
-    }
+    });
   };
 
   const handleSelectConversation = (conversationId: string) => {
     router.push(`/conversations/${conversationId}`);
   };
 
-  const handleDeleteConversation = async (conversationId: string) => {
-    const previousConversations = conversations;
-    const nextConversations = conversations.filter((conversation) => conversation.id !== conversationId);
-
-    setDeletingId(conversationId);
-    startCreateTransition(() => {
-      setOptimisticConversations(nextConversations);
+  const handleDeleteConversation = (conversationId: string) => {
+    deleteMutation.mutate(conversationId, {
+      onSuccess: () => {
+        if (conversationId === activeConversationId) {
+          router.push('/');
+        }
+        router.refresh();
+      }
     });
-
-    try {
-      const response = await fetch(`/api/conversations/${conversationId}`, {
-        method: 'DELETE'
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete conversation');
-      }
-
-      setConversations(nextConversations);
-      startCreateTransition(() => {
-        setOptimisticConversations(nextConversations);
-      });
-
-      if (conversationId === activeConversationId) {
-        router.push('/');
-      }
-
-      router.refresh();
-    } catch {
-      setConversations(previousConversations);
-      startCreateTransition(() => {
-        setOptimisticConversations(previousConversations);
-      });
-    } finally {
-      setDeletingId(undefined);
-    }
   };
 
   return (
@@ -108,13 +67,13 @@ export default function SidebarClient({ initialConversations, activeConversation
       className="flex h-full flex-col border-r border-slate-800 bg-slate-900/90 p-3"
       aria-label="Conversations sidebar"
     >
-      <NewChatButton onClick={handleCreateChat} disabled={isCreating} />
+      <NewChatButton onClick={handleCreateChat} disabled={createMutation.isPending} />
       <ConversationList
-        conversations={optimisticConversations}
+        conversations={conversations}
         activeConversationId={activeConversationId}
         onSelectConversation={handleSelectConversation}
         onDeleteConversation={handleDeleteConversation}
-        deletingId={deletingId}
+        deletingId={deleteMutation.isPending ? deleteMutation.variables : undefined}
       />
     </aside>
   );
