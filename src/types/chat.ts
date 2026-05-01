@@ -1,15 +1,13 @@
-export type MessageRole = "user" | "assistant" | "system";
-
-export interface Message {
-  id: string;
-  role: MessageRole;
-  content: string;
-  timestamp: number;
-  edited?: boolean;
-  reactions?: Record<string, number>; // emoji -> count
-}
+export type Role = 'user' | 'assistant';
 
 export interface Conversation {
   id: string;
   title: string;
+  preview: string;
+}
+
+export interface Message {
+  id: string;
+  role: Role;
+  content: string;
 }

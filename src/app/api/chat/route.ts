@@ -1,94 +1,47 @@
-import { apiError } from "@/lib/api";
+import { createOpenAI } from '@ai-sdk/openai';
+import { convertToModelMessages, streamText, UIMessage } from 'ai';
+import { NextResponse } from 'next/server';
 
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL = "openai/gpt-3.5-turbo";
+const openrouter = createOpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: 'https://openrouter.ai/api/v1',
+  headers: {
+    'HTTP-Referer': 'http://localhost:3000',
+    'X-Title': 'Next Chat UI'
+  }
+});
 
 export async function POST(request: Request) {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    return apiError(
-      "OPENROUTER_API_KEY is not set. Add it in Vercel environment variables.",
-      503
-    );
+  const body = (await request.json().catch(() => ({}))) as { messages?: UIMessage[] };
+  const messages = body.messages ?? [];
+
+  const hasUserText = messages.some(
+    (message) =>
+      message.role === 'user' &&
+      message.parts?.some((part) => part.type === 'text' && part.text.trim().length > 0)
+  );
+
+  if (!hasUserText) {
+    return NextResponse.json({ error: 'At least one user message is required.' }, { status: 400 });
   }
 
-  let body: { messages?: Array<{ role: string; content: string }>; model?: string };
-  try {
-    body = (await request.json()) as typeof body;
-  } catch {
-    return apiError("Invalid JSON body", 400);
-  }
+  if (!process.env.OPENROUTER_API_KEY) {
+    const fallback =
+      'Mock reply: add OPENROUTER_API_KEY to stream real model responses from OpenRouter.';
 
-  const messages = body?.messages;
-  if (!Array.isArray(messages) || messages.length === 0) {
-    return apiError("messages array is required and must not be empty", 400);
-  }
-
-  const model = typeof body.model === "string" && body.model.trim()
-    ? body.model.trim()
-    : DEFAULT_MODEL;
-
-  try {
-    const res = await fetch(OPENROUTER_URL, {
-      method: "POST",
+    return new Response(fallback, {
       headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": process.env.VERCEL_URL
-          ? `https://${process.env.VERCEL_URL}`
-          : "http://localhost:3000",
-      },
-      body: JSON.stringify({
-        model,
-        messages: messages.map((m) => ({
-          role: m.role,
-          content: m.content,
-        })),
-        stream: true,
-      }),
-      signal: request.signal,
+        'Content-Type': 'text/plain; charset=utf-8'
+      }
     });
-
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("OpenRouter error", res.status, text);
-      return apiError(
-        `OpenRouter request failed: ${res.status}`,
-        res.status >= 500 ? 502 : 400
-      );
-    }
-
-    const reader = res.body?.getReader();
-    if (!reader) {
-      return apiError("No response body from OpenRouter", 502);
-    }
-
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            controller.enqueue(value);
-          }
-        } finally {
-          controller.close();
-        }
-      },
-    });
-
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    });
-  } catch (e) {
-    if ((e as Error).name === "AbortError") {
-      return new Response(null, { status: 499 });
-    }
-    console.error("POST /api/chat", e);
-    return apiError("Chat request failed", 500);
   }
+
+  const modelMessages = await convertToModelMessages(messages);
+
+  const result = streamText({
+    model: openrouter('openrouter/auto'),
+    messages: modelMessages
+  });
+
+  return result.toUIMessageStreamResponse();
 }

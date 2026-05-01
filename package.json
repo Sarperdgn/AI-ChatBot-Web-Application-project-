@@ -1,37 +1,35 @@
 {
-  "name": "ai-chat-app",
-  "version": "0.1.0",
+  "name": "chat-ui-next",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3000",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "format": "prettier . --write",
-    "postinstall": "prisma generate"
+    "start": "next start -p 3000",
+    "lint": "next lint"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.4.0",
-    "@prisma/client": "^7.4.0",
-    "@tanstack/react-query": "^5.90.21",
-    "next": "16.1.6",
-    "pg": "^8.18.0",
-    "prisma": "^7.4.0",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "zustand": "^5.0.11"
+    "@ai-sdk/openai": "^3.0.52",
+    "@ai-sdk/react": "^3.0.160",
+    "@prisma/adapter-better-sqlite3": "^7.6.0",
+    "@prisma/client": "^7.6.0",
+    "@tanstack/react-query": "^5.96.2",
+    "ai": "^6.0.158",
+    "better-sqlite3": "^12.8.0",
+    "next": "15.2.0",
+    "react": "19.0.1",
+    "react-dom": "19.0.1",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/pg": "^8.16.0",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "babel-plugin-react-compiler": "1.0.0",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.6",
-    "prettier": "^3.4.2",
-    "tailwindcss": "^4.2.0",
-    "typescript": "^5"
+    "@tailwindcss/postcss": "^4.0.9",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.13.9",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "eslint": "^9.22.0",
+    "eslint-config-next": "15.2.0",
+    "tailwindcss": "^4.0.9",
+    "typescript": "^5.8.2"
   }
 }
