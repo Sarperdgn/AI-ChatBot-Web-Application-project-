@@ -11,3 +11,5 @@ venv
 dev.db
 .data/conversations.json
 .data/messages.json
+.DS_Store
+package-lock.json

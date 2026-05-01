@@ -1,61 +1,62 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useMemo } from 'react';
-import ChatPanel from './ChatPanel';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import type { Conversation, Message } from '@/types/chat';
-import { useConversations } from '@/hooks/conversations';
-import { useMessages, useSendMessage } from '@/hooks/messages';
-import { useQueryClient } from '@tanstack/react-query';
+import ChatPanel from './ChatPanel';
 
-export default function ConversationChat({ conversationId }: { conversationId: string }) {
-  const { data: conversations = [] } = useConversations();
-  const { data: messages = [], isLoading: isMessagesLoading } = useMessages(conversationId);
-  const sendMessage = useSendMessage();
-  const queryClient = useQueryClient();
+interface ConversationChatProps {
+  conversationId: string;
+  conversation: Conversation;
+  initialMessages: Message[];
+}
 
-  const activeConversation = useMemo(
-    () => conversations.find((conversation) => conversation.id === conversationId) || null,
-    [conversations, conversationId]
+export default function ConversationChat({
+  conversationId,
+  conversation,
+  initialMessages
+}: ConversationChatProps) {
+  const router = useRouter();
+
+  const { messages, status, sendMessage } = useChat({
+    id: conversationId,
+    messages: initialMessages.map((message) => ({
+      id: message.id,
+      role: message.role,
+      parts: [{ type: 'text', text: message.content }]
+    })),
+    transport: new DefaultChatTransport({
+      api: `/api/conversations/${conversationId}/stream`
+    }),
+    onFinish: () => {
+      router.refresh();
+    }
+  });
+
+  const mappedMessages = useMemo<Message[]>(
+    () =>
+      messages.map((message) => ({
+        id: message.id,
+        role: message.role as 'user' | 'assistant',
+        content: message.parts
+          .filter((part) => part.type === 'text')
+          .map((part) => part.text)
+          .join('')
+      })),
+    [messages]
   );
 
   const handleSendMessage = async (content: string) => {
-    if (!conversationId) return;
-
-    // Optimistic update
-    const optimisticMessage: Message = {
-      id: `local-${Date.now()}`,
-      role: 'user',
-      content
-    };
-
-    queryClient.setQueryData(['messages', conversationId], (old: Message[] = []) => [
-      ...old,
-      optimisticMessage
-    ]);
-
-    try {
-      await sendMessage.mutateAsync({ conversationId, content });
-    } catch {
-      // Revert optimistic update on error
-      queryClient.setQueryData(['messages', conversationId], (old: Message[] = []) =>
-        old.filter((msg) => msg.id !== optimisticMessage.id)
-      );
-      queryClient.setQueryData(['messages', conversationId], (old: Message[] = []) => [
-        ...old,
-        {
-          id: `error-${Date.now()}`,
-          role: 'assistant',
-          content: 'Sorry, I could not send that message. Please try again.'
-        }
-      ]);
-    }
+    await sendMessage({ text: content }, { body: { conversationId } });
   };
 
   return (
     <ChatPanel
-      conversation={activeConversation}
-      messages={messages}
-      isLoading={isMessagesLoading || sendMessage.isPending}
+      conversation={conversation}
+      messages={mappedMessages}
+      isLoading={status === 'streaming' || status === 'submitted'}
       onSendMessage={handleSendMessage}
     />
   );

@@ -1,21 +1,19 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Conversation } from '@/types/chat';
 
-const CONVERSATIONS_KEY = 'conversations';
+export const CONVERSATIONS_QUERY_KEY = ['conversations'] as const;
 
-async function fetchConversations(): Promise<Conversation[]> {
-  const response = await fetch('/api/conversations');
-  if (!response.ok) throw new Error('Failed to load conversations');
-  return response.json();
-}
-
-async function createConversation(title?: string): Promise<Conversation> {
+async function createConversationApi(title?: string): Promise<Conversation> {
   const response = await fetch('/api/conversations', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title })
   });
-  if (!response.ok) throw new Error('Failed to create conversation');
+
+  if (!response.ok) {
+    throw new Error('Failed to create conversation');
+  }
+
   return response.json();
 }
 
@@ -23,23 +21,48 @@ async function deleteConversationApi(id: string): Promise<void> {
   const response = await fetch(`/api/conversations/${id}`, {
     method: 'DELETE'
   });
-  if (!response.ok) throw new Error('Failed to delete conversation');
-}
 
-export function useConversations() {
-  return useQuery({
-    queryKey: [CONVERSATIONS_KEY],
-    queryFn: fetchConversations
-  });
+  if (!response.ok) {
+    throw new Error('Failed to delete conversation');
+  }
 }
 
 export function useCreateConversation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createConversation,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [CONVERSATIONS_KEY] });
+    mutationFn: createConversationApi,
+    onMutate: async (title) => {
+      await queryClient.cancelQueries({ queryKey: CONVERSATIONS_QUERY_KEY });
+      const previous = queryClient.getQueryData<Conversation[]>(CONVERSATIONS_QUERY_KEY) ?? [];
+      const optimisticId = `optimistic-${Date.now()}`;
+
+      const optimisticConversation: Conversation = {
+        id: optimisticId,
+        title: title || `New Chat ${previous.length + 1}`,
+        preview: 'Start a fresh conversation'
+      };
+
+      queryClient.setQueryData<Conversation[]>(CONVERSATIONS_QUERY_KEY, [
+        optimisticConversation,
+        ...previous
+      ]);
+
+      return { previous, optimisticId };
+    },
+    onError: (_error, _variables, context) => {
+      queryClient.setQueryData(CONVERSATIONS_QUERY_KEY, context?.previous ?? []);
+    },
+    onSuccess: (created, _variables, context) => {
+      queryClient.setQueryData<Conversation[]>(CONVERSATIONS_QUERY_KEY, (current = []) => {
+        return [
+          created,
+          ...current.filter(
+            (conversation) =>
+              conversation.id !== context?.optimisticId && conversation.id !== created.id
+          )
+        ];
+      });
     }
   });
 }
@@ -49,8 +72,19 @@ export function useDeleteConversation() {
 
   return useMutation({
     mutationFn: deleteConversationApi,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [CONVERSATIONS_KEY] });
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: CONVERSATIONS_QUERY_KEY });
+      const previous = queryClient.getQueryData<Conversation[]>(CONVERSATIONS_QUERY_KEY) ?? [];
+
+      queryClient.setQueryData<Conversation[]>(
+        CONVERSATIONS_QUERY_KEY,
+        previous.filter((conversation) => conversation.id !== id)
+      );
+
+      return { previous };
+    },
+    onError: (_error, _id, context) => {
+      queryClient.setQueryData(CONVERSATIONS_QUERY_KEY, context?.previous ?? []);
     }
   });
 }

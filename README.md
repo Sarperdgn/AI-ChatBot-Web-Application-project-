@@ -92,3 +92,38 @@ WEEK 5
 - Local: `npm install` then `npm run dev` (runs on `http://localhost:3000`)
 - Build: `npm install` then `npm run build`
 - Lint: `npm install` then `npm run lint`
+
+WEEK 6
+
+### Added
+
+- Prisma-backed persistence with schema models for `Conversation` and `Message`.
+- Server modules under `src/server/` for DB-backed conversation/message operations.
+- Streaming response endpoint for chat generation at `POST /api/conversations/[conversationId]/stream`.
+- Client hooks for data handling (`src/hooks/conversations.ts`, `src/hooks/messages.ts`).
+
+### Changed
+
+- API handlers now use structured server helpers instead of the older file-store approach.
+- Chat flow is organized around a selected conversation with incremental updates in the UI.
+- Project structure now separates `components`, `hooks`, `server`, and `lib` for easier maintenance.
+
+### Run
+
+- Dev: `npm run dev`
+- Build: `npm run build`
+- Lint: `npm run lint`
+
+WEEK 7 (SERVER-FIRST + AI SDK)
+
+### Added
+
+- A dedicated server-side data access layer in `src/server/chat-dal.ts` to centralize conversation/message database queries.
+- Optimistic sidebar mutations for create/delete conversation flows with rollback on failure.
+- Server-refresh flow after mutations (`router.refresh()`) so SSR sections stay in sync.
+
+### Changed
+
+- API routes now act as wrappers and delegate persistence work to the shared server data layer.
+- Continued the streaming flow using Vercel AI SDK hooks + streaming route, with message persistence handled server-side.
+- Sidebar conversation data is fetched server-side and rendered from database-backed data.

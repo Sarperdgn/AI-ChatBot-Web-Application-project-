@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { deleteConversation, getConversation } from '@/server/conversations';
+import { deleteConversation, getConversation } from '@/server/chat-dal';
 
 export async function DELETE(
   _request: Request,

@@ -1,5 +1,3 @@
-'use client';
-
 import type { Conversation } from '@/types/chat';
 
 interface ConversationItemProps {
